@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_table_rel_role_permission
+      author: ${mq}
+      changes:
+        - createTable:
+            tableName: _rel_role_permission
+            columns:
+              - column:
+                  name: role_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: permission
+                  type: VARCHAR(63)
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: _rel_role_permission
+            baseColumnNames: role_id
+            constraintName: fk_role_permission_to_role
+            referencedTableName: _role
+            referencedColumnNames: id
+        - addPrimaryKey:
+            tableName: _rel_role_permission
+            columnNames: role_id, permission
+            constraintName: pk_role_permissions

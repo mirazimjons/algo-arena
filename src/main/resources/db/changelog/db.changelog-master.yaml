@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - property:
+      name: mq
+      value: the_javer
+  - include:
+      file: /db/changelog/sub/001_create_table_role.yaml
+  - include:
+      file: /db/changelog/sub/002_create_rel_role_and_permission.yaml
+  - include:
+      file: /db/changelog/sub/002_table_user.yaml
