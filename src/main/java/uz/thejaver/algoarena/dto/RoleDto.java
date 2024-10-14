@@ -1,6 +1,7 @@
 package uz.thejaver.algoarena.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,7 +20,11 @@ import java.util.Set;
 public class RoleDto extends AbsUuidAuditableDto {
 
     @NotBlank
+    @Size(max = 127)
     String name;
+
+    @Size(max = 255)
+    String description;
 
     Set<Permission> permissions = new HashSet<>();
 

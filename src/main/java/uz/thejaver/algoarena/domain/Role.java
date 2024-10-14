@@ -7,8 +7,6 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import uz.thejaver.algoarena.domain.audit.AuditAware;
 import uz.thejaver.algoarena.domain.enums.Permission;
 import uz.thejaver.springbootstarterjpasupporter.entity.AbsUuidAuditableEntity;
 
@@ -22,11 +20,12 @@ import java.util.Set;
 @ToString
 @Table(name = "_role")
 @Entity
-@EntityListeners(AuditingEntityListener.class)
 public class Role extends AbsUuidAuditableEntity {
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 127)
     String name;
+
+    String description;
 
     @ElementCollection(targetClass = Permission.class, fetch = FetchType.EAGER)
     @CollectionTable(
