@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_table_rel_user_and_role
+      author: ${mq}
+      changes:
+        - createTable:
+            tableName: _rel_user_and_role
+            columns:
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: _rel_user_and_role
+            baseColumnNames: user_id
+            constraintName: fk_user_role_to_user
+            referencedTableName: _user
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            baseTableName: _rel_user_and_role
+            baseColumnNames: role_id
+            constraintName: fk_user_role_to_role
+            referencedTableName: _role
+            referencedColumnNames: id

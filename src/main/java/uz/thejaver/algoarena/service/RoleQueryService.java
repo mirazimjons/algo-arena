@@ -33,9 +33,6 @@ public class RoleQueryService extends AbsQueryService<UUID, Role, RoleDto, RoleC
         if (Objects.nonNull(criteria.getDescription())) {
             specification = joiner.join(specification, buildStringSpecification(criteria.getDescription(), Role_.description));
         }
-//        if (Objects.nonNull(criteria.getPermission())) {
-//            specification = joiner.join(specification, buildSpecification(criteria.getPermission(), root -> root.join(Role_.permissions, JoinType.LEFT)));
-//        }
 
         return specification;
     }

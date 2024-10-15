@@ -7,4 +7,4 @@ databaseChangeLog:
   - include:
       file: /db/changelog/sub/002_create_rel_role_and_permission.yaml
   - include:
-      file: /db/changelog/sub/002_table_user.yaml
+      file: /db/changelog/sub/003_table_user.yaml

@@ -2,7 +2,7 @@ package uz.thejaver.algoarena;
 
 import org.junit.jupiter.api.Test;
 
-class AlgoArenaApplicationTests extends AbsAlgoArenaTest {
+class AlgoArenaApplicationIT extends AbsAlgoArenaTest {
 
     @Test
     void contextLoads() {

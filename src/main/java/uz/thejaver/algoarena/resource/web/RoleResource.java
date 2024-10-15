@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import uz.thejaver.algoarena.domain.criteria.RoleCriteria;
 import uz.thejaver.algoarena.dto.RoleDto;
@@ -25,6 +26,7 @@ public class RoleResource {
     private final RoleQueryService roleQueryService;
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public RoleDto create(@RequestBody @Valid RoleDto role) {
         return roleService.save(role);
     }
@@ -48,6 +50,12 @@ public class RoleResource {
     @GetMapping("/count")
     public Long count(RoleCriteria criteria) {
         return roleQueryService.countByCriteria(criteria);
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable("id") UUID id) {
+        roleService.deleteById(id);
     }
 
 }

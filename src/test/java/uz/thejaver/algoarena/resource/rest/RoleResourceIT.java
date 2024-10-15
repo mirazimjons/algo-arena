@@ -4,6 +4,8 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import uz.thejaver.algoarena.AbsAlgoArenaTest;
@@ -54,27 +56,10 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
         initRole();
     }
 
-    @Test
-    void createRoleWithNullName() throws Exception {
-        roleDto.setName(null);
-        long before = roleRepository.count();
-        mvc.perform(post(DEFAULT_PREFIX_URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(TestUtil.convertObjectToJsonBytes(roleDto))
-                )
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$").isNotEmpty())
-                .andExpect(jsonPath("$.title").isNotEmpty())
-                .andExpect(jsonPath("$.attributes.name").isNotEmpty())
-                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
-        ;
-        long after = roleRepository.count();
-        assertThat(after).isEqualTo(before);
-    }
-
-    @Test
-    void createRoleWithBlankName() throws Exception {
-        roleDto.setName("");
+    @ParameterizedTest
+    @NullAndEmptySource
+    void createRoleWithInvalidName(String name) throws Exception {
+        roleDto.setName(name);
         long before = roleRepository.count();
         mvc.perform(post(DEFAULT_PREFIX_URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -97,7 +82,7 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(TestUtil.convertObjectToJsonBytes(roleDto))
                 )
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$").isNotEmpty())
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
@@ -219,6 +204,36 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
 
         long after = roleRepository.count();
         assertThat(after).isEqualTo(before);
+    }
+
+    @Test
+    void deleteRoleByNonExistingId() throws Exception {
+        Role savedRole = roleRepository.save(buildDefaultRole());
+
+        long before = roleRepository.count();
+
+        mvc.perform(delete(ENTITY_API_URL, UUID.randomUUID()))
+                .andExpect(status().isNoContent())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+        ;
+
+        long after = roleRepository.count();
+        assertThat(after).isEqualTo(before);
+    }
+
+    @Test
+    void deleteRoleById() throws Exception {
+        Role savedRole = roleRepository.save(buildDefaultRole());
+
+        long before = roleRepository.count();
+
+        mvc.perform(delete(ENTITY_API_URL, savedRole.getId()))
+                .andExpect(status().isNoContent())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+        ;
+
+        long after = roleRepository.count();
+        assertThat(after).isEqualTo(before - 1);
     }
 
     @Test
