@@ -7,21 +7,20 @@ import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
 import uz.thejaver.springbootstarterjpasupporter.dto.AbsUuidAuditableDto;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Accessors(chain = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@ToString(callSuper = true)
 public class UserDto extends AbsUuidAuditableDto {
-
-    UUID id;
 
     @NotBlank
     @Size(max = 63)

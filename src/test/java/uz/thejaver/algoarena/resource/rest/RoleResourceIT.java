@@ -313,7 +313,7 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
         role = buildDefaultRole();
     }
 
-    public RoleDto buildDefaultRoleDto() {
+    public static RoleDto buildDefaultRoleDto() {
         return new RoleDto()
                 .setName(DEFAULT_NAME)
                 .setPermissions(new HashSet<>(Set.of(DEFAULT_PERMISSION)))
@@ -321,7 +321,7 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
                 ;
     }
 
-    public RoleDto buildUpdateRoleDto() {
+    public static RoleDto buildUpdateRoleDto() {
         return new RoleDto()
                 .setName(UPDATED_NAME)
                 .setPermissions(new HashSet<>(Set.of(UPDATED_PERMISSION)))
@@ -329,7 +329,7 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
                 ;
     }
 
-    public Role buildDefaultRole() {
+    public static Role buildDefaultRole() {
         return new Role()
                 .setName(DEFAULT_NAME)
                 .setPermissions(new HashSet<>(Set.of(DEFAULT_PERMISSION)))
@@ -337,7 +337,7 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
                 ;
     }
 
-    public Role buildUpdatetRole() {
+    public static Role buildUpdatetRole() {
         return new Role()
                 .setName(UPDATED_NAME)
                 .setPermissions(new HashSet<>(Set.of(UPDATED_PERMISSION)))

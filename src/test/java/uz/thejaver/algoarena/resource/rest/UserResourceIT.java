@@ -3,6 +3,7 @@ package uz.thejaver.algoarena.resource.rest;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -22,9 +23,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -41,10 +40,8 @@ public class UserResourceIT extends AbsAlgoArenaTest {
     static final String DEFAULT_PASSWORD = "123";
     static final String UPDATED_PASSWORD = "abc";
 
-    static final RoleDto DEFAULT_ROLE = new RoleDto()
-            .setName("ADMIN");
-    static final RoleDto UPDATED_ROLE = new RoleDto()
-            .setName("USER");
+    static final RoleDto DEFAULT_ROLE = RoleResourceIT.buildDefaultRoleDto();
+    static final RoleDto UPDATED_ROLE = RoleResourceIT.buildUpdateRoleDto();
 
     static final String DEFAULT_PREFIX_URL = "/api/users";
     static final String ENTITY_API_URL = DEFAULT_PREFIX_URL + "/{id}";
@@ -125,25 +122,30 @@ public class UserResourceIT extends AbsAlgoArenaTest {
         assertThat(after).isEqualTo(before);
     }
 
-//    @Test
-//    void createRole() throws Exception {
-//        long before = roleRepository.count();
-//        mvc.perform(post(DEFAULT_PREFIX_URL)
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(TestUtil.convertObjectToJsonBytes(userDto))
-//                )
-//                .andExpect(status().isCreated())
-//                .andExpect(jsonPath("$").isNotEmpty())
-//                .andExpect(jsonPath("$.id").isNotEmpty())
-//                .andExpect(jsonPath("$.name").value(DEFAULT_USERNAME))
-//                .andExpect(jsonPath("$.description").value(DEFAULT_EMAIL))
-//                .andExpect(jsonPath("$.permissions").isArray())
-//                .andExpect(jsonPath("$.permissions").value(hasSize(1)))
-//                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
-//        ;
-//        long after = roleRepository.count();
-//        assertThat(after).isEqualTo(before + 1);
-//    }
+    @Test
+    void createUser() throws Exception {
+        long rolesBefore = roleRepository.count();
+        long usersBefore = userRepository.count();
+        mvc.perform(post(DEFAULT_PREFIX_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(userDto))
+                )
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$").isNotEmpty())
+                .andExpect(jsonPath("$.id").isNotEmpty())
+                .andExpect(jsonPath("$.username").value(DEFAULT_USERNAME))
+                .andExpect(jsonPath("$.email").value(DEFAULT_EMAIL))
+                .andExpect(jsonPath("$.password").isEmpty())
+                .andExpect(jsonPath("$.roles").value(hasSize(1)))
+                .andExpect(jsonPath("$.roles.[0].id").isNotEmpty())
+                .andExpect(jsonPath("$.roles.[0].id").value(DEFAULT_ROLE.getId().toString()))
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+        ;
+        long rolesAfter = roleRepository.count();
+        long usersAfter = userRepository.count();
+        assertThat(rolesAfter).isEqualTo(rolesBefore);
+        assertThat(usersAfter).isEqualTo(usersBefore + 1);
+    }
 
 //    @Test
 //    void updateRoleWithNullName() throws Exception {
@@ -359,90 +361,92 @@ public class UserResourceIT extends AbsAlgoArenaTest {
 //    }
 
     public void initUser() {
-        userDto = buildDefaultUserDto();
+        Role role = RoleResourceIT.buildDefaultRole();
+        roleRepository.save(role);
+
+        DEFAULT_ROLE.setId(role.getId());
+
+        RoleDto roleDto = new RoleDto();
+        roleDto.setId(role.getId());
+        roleDto.setName(role.getName());
+        userDto = buildDefaultUserDto().setRoles(new HashSet<>(Set.of(roleDto)));
+
         user = buildDefaultUser();
+        user.setRoles(new HashSet<>(Set.of(role)));
     }
 
-    public UserDto buildDefaultUserDto() {
+    public static UserDto buildDefaultUserDto() {
         return new UserDto()
                 .setUsername(DEFAULT_USERNAME)
                 .setEmail(DEFAULT_EMAIL)
                 .setPassword(DEFAULT_PASSWORD)
-                .setRoles(new HashSet<>(Set.of(DEFAULT_ROLE)))
                 ;
     }
 
-    public UserDto buildUpdateUserDto() {
+    public static UserDto buildUpdateUserDto() {
         return new UserDto()
                 .setUsername(UPDATED_USERNAME)
                 .setEmail(UPDATED_EMAIL)
                 .setPassword(UPDATED_PASSWORD)
-                .setRoles(new HashSet<>(Set.of(UPDATED_ROLE)))
                 ;
     }
 
-    public User buildDefaultUser() {
-        Role role = new Role().setName("ADMIN");
-        roleRepository.save(role);
+    public static User buildDefaultUser() {
         return new User()
                 .setUsername(DEFAULT_USERNAME)
                 .setEmail(DEFAULT_EMAIL)
                 .setPassword(DEFAULT_PASSWORD)
-                .setRoles(new HashSet<>(Set.of(role)))
                 ;
     }
 
-    public User buildUpdatedUser() {
-        Role role = new Role().setName("USER");
-        roleRepository.save(role);
+    public static User buildUpdatedUser() {
         return new User()
                 .setUsername(UPDATED_USERNAME)
                 .setEmail(UPDATED_EMAIL)
                 .setPassword(UPDATED_PASSWORD)
-                .setRoles(new HashSet<>(Set.of(role)))
                 ;
     }
 
-    void prepareData() {
-        user = buildDefaultUser();
-        userRepository.save(user);
-        ID = user.getId();
-    }
+//    void prepareData() {
+//        user = buildDefaultUser();
+//        userRepository.save(user);
+//        ID = user.getId();
+//    }
 
-    void shouldBeFound(String filter, Integer expectedSize) throws Exception {
-        mvc.perform(get("%s?%s".formatted(DEFAULT_PREFIX_URL, filter)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isNotEmpty())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content").value(hasSize(expectedSize)))
-                .andExpect(jsonPath("$.content.[*].id").value(hasItem(ID.toString())))
-                .andExpect(jsonPath("$.content.[*].name").value(hasItem(DEFAULT_USERNAME)))
-                .andExpect(jsonPath("$.content.[*].description").value(hasItem(DEFAULT_EMAIL)))
-                .andExpect(jsonPath("$.content.[*].permissions").isArray())
-                .andExpect(jsonPath("$.content.[*].permissions").value(hasSize(1)))
-        ;
-        mvc.perform(get("%s?%s".formatted(ENTITY_COUNT_URL, filter)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").value(expectedSize));
-    }
-
-    void shouldNotBeFound(String filter, Integer expectedSize) throws Exception {
-        mvc.perform(get("%s?%s".formatted(DEFAULT_PREFIX_URL, filter)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content").value(hasSize(expectedSize)))
-        ;
-        mvc.perform(get("%s?%s".formatted(ENTITY_COUNT_URL, filter)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").value(expectedSize));
-    }
-
-    void shouldBeFound(String filter) throws Exception {
-        shouldBeFound(filter, 1);
-    }
-
-    void shouldNotBeFound(String filter) throws Exception {
-        shouldNotBeFound(filter, 0);
-    }
+//    void shouldBeFound(String filter, Integer expectedSize) throws Exception {
+//        mvc.perform(get("%s?%s".formatted(DEFAULT_PREFIX_URL, filter)))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$").isNotEmpty())
+//                .andExpect(jsonPath("$.content").isArray())
+//                .andExpect(jsonPath("$.content").value(hasSize(expectedSize)))
+//                .andExpect(jsonPath("$.content.[*].id").value(hasItem(ID.toString())))
+//                .andExpect(jsonPath("$.content.[*].name").value(hasItem(DEFAULT_USERNAME)))
+//                .andExpect(jsonPath("$.content.[*].description").value(hasItem(DEFAULT_EMAIL)))
+//                .andExpect(jsonPath("$.content.[*].permissions").isArray())
+//                .andExpect(jsonPath("$.content.[*].permissions").value(hasSize(1)))
+//        ;
+//        mvc.perform(get("%s?%s".formatted(ENTITY_COUNT_URL, filter)))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$").value(expectedSize));
+//    }
+//
+//    void shouldNotBeFound(String filter, Integer expectedSize) throws Exception {
+//        mvc.perform(get("%s?%s".formatted(DEFAULT_PREFIX_URL, filter)))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.content").isArray())
+//                .andExpect(jsonPath("$.content").value(hasSize(expectedSize)))
+//        ;
+//        mvc.perform(get("%s?%s".formatted(ENTITY_COUNT_URL, filter)))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$").value(expectedSize));
+//    }
+//
+//    void shouldBeFound(String filter) throws Exception {
+//        shouldBeFound(filter, 1);
+//    }
+//
+//    void shouldNotBeFound(String filter) throws Exception {
+//        shouldNotBeFound(filter, 0);
+//    }
 
 }

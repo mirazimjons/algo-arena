@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
 import uz.thejaver.algoarena.domain.enums.Permission;
@@ -17,6 +18,7 @@ import java.util.Set;
 @Data
 @Accessors(chain = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@ToString(callSuper = true)
 public class RoleDto extends AbsUuidAuditableDto {
 
     @NotBlank
