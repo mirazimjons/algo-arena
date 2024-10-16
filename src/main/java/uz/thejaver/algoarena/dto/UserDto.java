@@ -32,8 +32,6 @@ public class UserDto extends AbsUuidAuditableDto {
     @Email
     String email;
 
-    @NotBlank
-    @Size(max = 255)
     String password;
 
     Set<RoleDto> roles = new HashSet<>();

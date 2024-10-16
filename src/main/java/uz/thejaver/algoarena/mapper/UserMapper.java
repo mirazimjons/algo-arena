@@ -16,4 +16,8 @@ public interface UserMapper extends AbsMapper<UUID, User, UserDto> {
     @Mapping(target = "password", ignore = true)
     UserDto toDto(User entity);
 
+    @Override
+    @Mapping(target = "password", ignore = true)
+    User toEntity(UserDto dto);
+
 }

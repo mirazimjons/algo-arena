@@ -337,7 +337,7 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
                 ;
     }
 
-    public static Role buildUpdatetRole() {
+    public static Role buildUpdatedRole() {
         return new Role()
                 .setName(UPDATED_NAME)
                 .setPermissions(new HashSet<>(Set.of(UPDATED_PERMISSION)))
