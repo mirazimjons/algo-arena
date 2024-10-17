@@ -273,7 +273,7 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
     @Test
     @WithMockUser(permissions = Permission.CAN_DELETE_ROLES)
     void deleteByNonExistingId() throws Exception {
-        Role savedRole = roleRepository.save(buildDefaultRole());
+        roleRepository.save(buildDefaultRole());
 
         long before = roleRepository.count();
 

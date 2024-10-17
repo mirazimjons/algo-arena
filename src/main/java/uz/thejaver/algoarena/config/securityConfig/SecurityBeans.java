@@ -12,8 +12,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import uz.thejaver.algoarena.exeption.ExceptionType;
 import uz.thejaver.algoarena.domain.User;
+import uz.thejaver.algoarena.exeption.ExceptionType;
 import uz.thejaver.algoarena.repository.UserRepository;
 import uz.thejaver.springbootstarterexceptionsupporter.exception.CommonException;
 

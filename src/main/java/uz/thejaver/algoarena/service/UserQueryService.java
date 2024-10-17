@@ -24,7 +24,7 @@ public class UserQueryService extends AbsQueryService<UUID, User, UserDto, UserC
 
     @Override
     protected Specification<User> modifySpecification(@NonNull Specification<User> specification, @NonNull UserCriteria criteria) {
-        SpecificationJoiner<User> joiner = new SpecificationJoiner<User>(criteria.getFilterType());
+        SpecificationJoiner<User> joiner = new SpecificationJoiner<>(criteria.getFilterType());
 
         if (Objects.nonNull(criteria.getId())) {
             specification = joiner.join(specification, buildSpecification(criteria.getId(), User_.id));
