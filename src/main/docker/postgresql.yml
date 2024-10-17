@@ -1,0 +1,11 @@
+version: '3.9'
+name: algo_arena
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: algo_arena
+      POSTGRES_PASSWORD: 1235
+      POSTGRES_DB: algo_arena
+    ports:
+      - '5445:5432'

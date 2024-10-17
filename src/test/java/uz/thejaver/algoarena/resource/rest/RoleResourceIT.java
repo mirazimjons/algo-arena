@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import uz.thejaver.algoarena.AbsAlgoArenaTest;
+import uz.thejaver.algoarena.config.securityConfig.WithMockUser;
 import uz.thejaver.algoarena.domain.Role;
 import uz.thejaver.algoarena.domain.enums.Permission;
 import uz.thejaver.algoarena.dto.RoleDto;
@@ -35,8 +36,8 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
     static final String DEFAULT_DESCRIPTION = "User role";
     static final String UPDATED_DESCRIPTION = "Admin role";
 
-    static final Permission DEFAULT_PERMISSION = Permission.CAN_EDIT_PERMISSIONS;
-    static final Permission UPDATED_PERMISSION = Permission.CAN_VIEW_PERMISSIONS;
+    static final Permission DEFAULT_PERMISSION = Permission.CAN_UPDATE_ROLES;
+    static final Permission UPDATED_PERMISSION = Permission.CAN_READ_PERMISSIONS;
 
     static final String DEFAULT_PREFIX_URL = "/api/roles";
     static final String ENTITY_API_URL = DEFAULT_PREFIX_URL + "/{id}";
@@ -56,9 +57,31 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
         initRole();
     }
 
+    @Test
+    void create_401() throws Exception {
+        mvc.perform(post(DEFAULT_PREFIX_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(roleDto))
+                )
+                .andExpect(status().isUnauthorized())
+        ;
+    }
+
+    @Test
+    @WithMockUser
+    void create_403() throws Exception {
+        mvc.perform(post(DEFAULT_PREFIX_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(roleDto))
+                )
+                .andExpect(status().isForbidden())
+        ;
+    }
+
     @ParameterizedTest
     @NullAndEmptySource
-    void createRoleWithInvalidName(String name) throws Exception {
+    @WithMockUser(permissions = Permission.CAN_CREATE_ROLES)
+    void createWithInvalidName(String name) throws Exception {
         roleDto.setName(name);
         long before = roleRepository.count();
         mvc.perform(post(DEFAULT_PREFIX_URL)
@@ -76,7 +99,8 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
     }
 
     @Test
-    void createRole() throws Exception {
+    @WithMockUser(permissions = Permission.CAN_CREATE_ROLES)
+    void create() throws Exception {
         long before = roleRepository.count();
         mvc.perform(post(DEFAULT_PREFIX_URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -96,10 +120,41 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
     }
 
     @Test
-    void updateRoleWithNullName() throws Exception {
+    void update_401() throws Exception {
         Role savedRole = roleRepository.save(buildDefaultRole());
         RoleDto updatedRoleDto = buildUpdateRoleDto();
-        updatedRoleDto.setName(null);
+        updatedRoleDto.setId(savedRole.getId());
+
+        mvc.perform(put(ENTITY_API_URL, savedRole.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(updatedRoleDto))
+                )
+                .andExpect(status().isUnauthorized())
+        ;
+    }
+
+    @Test
+    @WithMockUser
+    void update_403() throws Exception {
+        Role savedRole = roleRepository.save(buildDefaultRole());
+        RoleDto updatedRoleDto = buildUpdateRoleDto();
+        updatedRoleDto.setId(savedRole.getId());
+
+        mvc.perform(put(DEFAULT_PREFIX_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(updatedRoleDto))
+                )
+                .andExpect(status().isForbidden())
+        ;
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @WithMockUser(permissions = Permission.CAN_UPDATE_ROLES)
+    void updateWithNullName(String name) throws Exception {
+        Role savedRole = roleRepository.save(buildDefaultRole());
+        RoleDto updatedRoleDto = buildUpdateRoleDto();
+        updatedRoleDto.setName(name);
         updatedRoleDto.setId(savedRole.getId());
 
         long before = roleRepository.count();
@@ -120,31 +175,8 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
     }
 
     @Test
-    void updateRoleWithBlankName() throws Exception {
-        Role savedRole = roleRepository.save(buildDefaultRole());
-        RoleDto updatedRoleDto = buildUpdateRoleDto();
-        updatedRoleDto.setName("");
-        updatedRoleDto.setId(savedRole.getId());
-
-        long before = roleRepository.count();
-
-        mvc.perform(put(DEFAULT_PREFIX_URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(TestUtil.convertObjectToJsonBytes(updatedRoleDto))
-                )
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$").isNotEmpty())
-                .andExpect(jsonPath("$.title").isNotEmpty())
-                .andExpect(jsonPath("$.attributes.name").isNotEmpty())
-                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
-        ;
-
-        long after = roleRepository.count();
-        assertThat(after).isEqualTo(before);
-    }
-
-    @Test
-    void updateRole() throws Exception {
+    @WithMockUser(permissions = Permission.CAN_UPDATE_ROLES)
+    void update() throws Exception {
         Role savedRole = roleRepository.save(buildDefaultRole());
 
         RoleDto updatedRoleDto = buildUpdateRoleDto();
@@ -171,8 +203,24 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
     }
 
     @Test
-    void getRoleByIdWithNonExistingId() throws Exception {
-        Role savedRole = roleRepository.save(buildDefaultRole());
+    void getById_401() throws Exception {
+        mvc.perform(get(ENTITY_API_URL, UUID.randomUUID()))
+                .andExpect(status().isUnauthorized())
+        ;
+    }
+
+    @Test
+    @WithMockUser
+    void getById_403() throws Exception {
+        mvc.perform(get(ENTITY_API_URL, UUID.randomUUID()))
+                .andExpect(status().isForbidden())
+        ;
+    }
+
+    @Test
+    @WithMockUser(permissions = Permission.CAN_READ_ROLES)
+    void getByIdWithNonExistingId() throws Exception {
+        roleRepository.save(buildDefaultRole());
 
         long before = roleRepository.count();
 
@@ -186,7 +234,8 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
     }
 
     @Test
-    void getRoleById() throws Exception {
+    @WithMockUser(permissions = Permission.CAN_READ_ROLES)
+    void getById() throws Exception {
         Role savedRole = roleRepository.save(buildDefaultRole());
 
         long before = roleRepository.count();
@@ -207,7 +256,23 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
     }
 
     @Test
-    void deleteRoleByNonExistingId() throws Exception {
+    void delete_401() throws Exception {
+        mvc.perform(delete(ENTITY_API_URL, UUID.randomUUID()))
+                .andExpect(status().isUnauthorized())
+        ;
+    }
+
+    @Test
+    @WithMockUser
+    void delete_403() throws Exception {
+        mvc.perform(delete(ENTITY_API_URL, UUID.randomUUID()))
+                .andExpect(status().isForbidden())
+        ;
+    }
+
+    @Test
+    @WithMockUser(permissions = Permission.CAN_DELETE_ROLES)
+    void deleteByNonExistingId() throws Exception {
         Role savedRole = roleRepository.save(buildDefaultRole());
 
         long before = roleRepository.count();
@@ -222,7 +287,8 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
     }
 
     @Test
-    void deleteRoleById() throws Exception {
+    @WithMockUser(permissions = Permission.CAN_DELETE_ROLES)
+    void deleteById() throws Exception {
         Role savedRole = roleRepository.save(buildDefaultRole());
 
         long before = roleRepository.count();
@@ -237,6 +303,37 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
     }
 
     @Test
+    void findAll_401() throws Exception {
+        mvc.perform(get(DEFAULT_PREFIX_URL))
+                .andExpect(status().isUnauthorized())
+        ;
+    }
+
+    @Test
+    @WithMockUser
+    void findAll_403() throws Exception {
+        mvc.perform(get(DEFAULT_PREFIX_URL))
+                .andExpect(status().isForbidden())
+        ;
+    }
+
+    @Test
+    void count_401() throws Exception {
+        mvc.perform(get(ENTITY_COUNT_URL))
+                .andExpect(status().isUnauthorized())
+        ;
+    }
+
+    @Test
+    @WithMockUser
+    void count_403() throws Exception {
+        mvc.perform(get(ENTITY_COUNT_URL))
+                .andExpect(status().isForbidden())
+        ;
+    }
+
+    @Test
+    @WithMockUser(permissions = Permission.CAN_READ_ROLES)
     void filterById() throws Exception {
         prepareData();
 
@@ -257,6 +354,7 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
     }
 
     @Test
+    @WithMockUser(permissions = Permission.CAN_READ_ROLES)
     void filterByName() throws Exception {
         prepareData();
 
@@ -283,6 +381,7 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
     }
 
     @Test
+    @WithMockUser(permissions = Permission.CAN_READ_ROLES)
     void filterByDescription() throws Exception {
         prepareData();
 

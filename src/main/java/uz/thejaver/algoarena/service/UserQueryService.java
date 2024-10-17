@@ -32,9 +32,6 @@ public class UserQueryService extends AbsQueryService<UUID, User, UserDto, UserC
         if (Objects.nonNull(criteria.getUsername())) {
             specification = joiner.join(specification, buildStringSpecification(criteria.getUsername(), User_.username));
         }
-        if (Objects.nonNull(criteria.getEmail())) {
-            specification = joiner.join(specification, buildStringSpecification(criteria.getEmail(), User_.email));
-        }
         if (Objects.nonNull(criteria.getRoleId())) {
             specification = joiner.join(specification, buildSpecification(criteria.getRoleId(), root -> root.join(User_.roles, JoinType.LEFT).get(Role_.id)));
         }

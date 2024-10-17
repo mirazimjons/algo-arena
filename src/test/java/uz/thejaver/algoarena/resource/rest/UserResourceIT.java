@@ -10,8 +10,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import uz.thejaver.algoarena.AbsAlgoArenaTest;
+import uz.thejaver.algoarena.config.securityConfig.WithMockUser;
 import uz.thejaver.algoarena.domain.Role;
 import uz.thejaver.algoarena.domain.User;
+import uz.thejaver.algoarena.domain.enums.Permission;
 import uz.thejaver.algoarena.dto.RoleDto;
 import uz.thejaver.algoarena.dto.UserDto;
 import uz.thejaver.algoarena.repository.RoleRepository;
@@ -34,9 +36,6 @@ public class UserResourceIT extends AbsAlgoArenaTest {
 
     static final String DEFAULT_USERNAME = "Jack";
     static final String UPDATED_USERNAME = "Bob";
-
-    static final String DEFAULT_EMAIL = "someone@localhost.uz";
-    static final String UPDATED_EMAIL = "another.one@localhost.uz";
 
     static final String DEFAULT_PASSWORD = "123";
     static final String UPDATED_PASSWORD = "abc";
@@ -64,10 +63,32 @@ public class UserResourceIT extends AbsAlgoArenaTest {
         initUser();
     }
 
+    @Test
+    void create_401() throws Exception {
+        mvc.perform(post(DEFAULT_PREFIX_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(userDto))
+                )
+                .andExpect(status().isUnauthorized())
+        ;
+    }
+
+    @Test
+    @WithMockUser
+    void create_403() throws Exception {
+        mvc.perform(post(DEFAULT_PREFIX_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(userDto))
+                )
+                .andExpect(status().isForbidden())
+        ;
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"ab", "#someone#"})
     @NullAndEmptySource
-    void createUserWithInvalidUsername(String username) throws Exception {
+    @WithMockUser(permissions = Permission.CAN_CREATE_USERS)
+    void createWithInvalidUsername(String username) throws Exception {
         userDto.setUsername(username);
         long before = roleRepository.count();
         mvc.perform(post(DEFAULT_PREFIX_URL)
@@ -84,28 +105,9 @@ public class UserResourceIT extends AbsAlgoArenaTest {
         assertThat(after).isEqualTo(before);
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"ab", "ab.localhost"})
-    @NullAndEmptySource
-    void createUserWithInvalidEmail(String email) throws Exception {
-        userDto.setEmail(email);
-        long before = roleRepository.count();
-        mvc.perform(post(DEFAULT_PREFIX_URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(TestUtil.convertObjectToJsonBytes(userDto))
-                )
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$").isNotEmpty())
-                .andExpect(jsonPath("$.title").isNotEmpty())
-                .andExpect(jsonPath("$.attributes.email").isNotEmpty())
-                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
-        ;
-        long after = roleRepository.count();
-        assertThat(after).isEqualTo(before);
-    }
-
     @Test
-    void createUser() throws Exception {
+    @WithMockUser(permissions = Permission.CAN_CREATE_USERS)
+    void create() throws Exception {
         long rolesBefore = roleRepository.count();
         long usersBefore = userRepository.count();
         mvc.perform(post(DEFAULT_PREFIX_URL)
@@ -116,7 +118,6 @@ public class UserResourceIT extends AbsAlgoArenaTest {
                 .andExpect(jsonPath("$").isNotEmpty())
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.username").value(DEFAULT_USERNAME))
-                .andExpect(jsonPath("$.email").value(DEFAULT_EMAIL))
                 .andExpect(jsonPath("$.password").isEmpty())
                 .andExpect(jsonPath("$.roles").value(hasSize(1)))
                 .andExpect(jsonPath("$.roles.[0].id").isNotEmpty())
@@ -129,10 +130,38 @@ public class UserResourceIT extends AbsAlgoArenaTest {
         assertThat(usersAfter).isEqualTo(usersBefore + 1);
     }
 
+    @Test
+    void update_401() throws Exception {
+        userRepository.save(user);
+        userDto = buildUpdateUserDto();
+        userDto.setId(user.getId());
+        mvc.perform(put(DEFAULT_PREFIX_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(userDto))
+                )
+                .andExpect(status().isUnauthorized())
+        ;
+    }
+
+    @Test
+    @WithMockUser
+    void update_403() throws Exception {
+        userRepository.save(user);
+        userDto = buildUpdateUserDto();
+        userDto.setId(user.getId());
+        mvc.perform(put(DEFAULT_PREFIX_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(userDto))
+                )
+                .andExpect(status().isForbidden())
+        ;
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"ab", "#someone#"})
     @NullAndEmptySource
-    void updateUserWithInvalidUsername(String username) throws Exception {
+    @WithMockUser(permissions = Permission.CAN_UPDATE_USERS)
+    void updateWithInvalidUsername(String username) throws Exception {
         userRepository.save(user);
         userDto = buildUpdateUserDto()
                 .setUsername(username);
@@ -153,32 +182,9 @@ public class UserResourceIT extends AbsAlgoArenaTest {
         assertThat(after).isEqualTo(before);
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"ab", "ab.localhost"})
-    @NullAndEmptySource
-    void updateUserWithInvalidEmail(String email) throws Exception {
-        userRepository.save(user);
-        userDto = buildUpdateUserDto()
-                .setEmail(email);
-        userDto.setId(user.getId());
-        long before = roleRepository.count();
-
-        mvc.perform(put(DEFAULT_PREFIX_URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(TestUtil.convertObjectToJsonBytes(userDto))
-                )
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$").isNotEmpty())
-                .andExpect(jsonPath("$.title").isNotEmpty())
-                .andExpect(jsonPath("$.attributes.email").isNotEmpty())
-                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
-        ;
-        long after = roleRepository.count();
-        assertThat(after).isEqualTo(before);
-    }
-
     @Test
-    void updateUser() throws Exception {
+    @WithMockUser(permissions = Permission.CAN_UPDATE_USERS)
+    void update() throws Exception {
         userRepository.save(user);
         userDto = buildUpdateUserDto();
         userDto.setId(user.getId());
@@ -194,7 +200,6 @@ public class UserResourceIT extends AbsAlgoArenaTest {
                 .andExpect(jsonPath("$").isNotEmpty())
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.username").value(UPDATED_USERNAME))
-                .andExpect(jsonPath("$.email").value(UPDATED_EMAIL))
                 .andExpect(jsonPath("$.password").isEmpty())
                 .andExpect(jsonPath("$.roles").value(hasSize(1)))
                 .andExpect(jsonPath("$.roles.[0].id").isNotEmpty())
@@ -208,7 +213,36 @@ public class UserResourceIT extends AbsAlgoArenaTest {
     }
 
     @Test
-    void getUserByIdWithNonExistingId() throws Exception {
+    void findById_401() throws Exception {
+        long before = userRepository.count();
+
+        mvc.perform(get(ENTITY_API_URL, user.getId()))
+                .andExpect(status().isUnauthorized())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+        ;
+
+        long after = userRepository.count();
+        assertThat(after).isEqualTo(before);
+    }
+
+    @Test
+    @WithMockUser
+    void findById_403() throws Exception {
+        userRepository.save(user);
+        long before = userRepository.count();
+
+        mvc.perform(get(ENTITY_API_URL, user.getId()))
+                .andExpect(status().isForbidden())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+        ;
+
+        long after = userRepository.count();
+        assertThat(after).isEqualTo(before);
+    }
+
+    @Test
+    @WithMockUser(permissions = Permission.CAN_READ_USERS)
+    void findByIdWithNonExistingId() throws Exception {
         userRepository.save(user);
         long before = userRepository.count();
 
@@ -222,7 +256,8 @@ public class UserResourceIT extends AbsAlgoArenaTest {
     }
 
     @Test
-    void getRoleById() throws Exception {
+    @WithMockUser(permissions = Permission.CAN_READ_USERS)
+    void findById() throws Exception {
         userRepository.save(user);
 
         long before = userRepository.count();
@@ -232,7 +267,6 @@ public class UserResourceIT extends AbsAlgoArenaTest {
                 .andExpect(jsonPath("$").isNotEmpty())
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.username").value(DEFAULT_USERNAME))
-                .andExpect(jsonPath("$.email").value(DEFAULT_EMAIL))
                 .andExpect(jsonPath("$.password").isEmpty())
                 .andExpect(jsonPath("$.roles").value(hasSize(1)))
                 .andExpect(jsonPath("$.roles.[0].id").isNotEmpty())
@@ -245,7 +279,36 @@ public class UserResourceIT extends AbsAlgoArenaTest {
     }
 
     @Test
-    void deleteUserByNonExistingId() throws Exception {
+    void delete_401() throws Exception {
+        long before = userRepository.count();
+
+        mvc.perform(delete(ENTITY_API_URL, user.getId()))
+                .andExpect(status().isUnauthorized())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+        ;
+
+        long after = userRepository.count();
+        assertThat(after).isEqualTo(before);
+    }
+
+    @Test
+    @WithMockUser
+    void delete_403() throws Exception {
+        userRepository.save(user);
+        long before = userRepository.count();
+
+        mvc.perform(delete(ENTITY_API_URL, user.getId()))
+                .andExpect(status().isForbidden())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+        ;
+
+        long after = userRepository.count();
+        assertThat(after).isEqualTo(before);
+    }
+
+    @Test
+    @WithMockUser(permissions = Permission.CAN_DELETE_USERS)
+    void deleteByNonExistingId() throws Exception {
         userRepository.save(buildDefaultUser());
 
         long before = userRepository.count();
@@ -260,7 +323,8 @@ public class UserResourceIT extends AbsAlgoArenaTest {
     }
 
     @Test
-    void deleteRoleById() throws Exception {
+    @WithMockUser(permissions = Permission.CAN_DELETE_USERS)
+    void deleteById() throws Exception {
         userRepository.save(user);
 
         long before = userRepository.count();
@@ -275,6 +339,43 @@ public class UserResourceIT extends AbsAlgoArenaTest {
     }
 
     @Test
+    void findAll_401() throws Exception {
+        mvc.perform(get(DEFAULT_PREFIX_URL))
+                .andExpect(status().isUnauthorized())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+        ;
+    }
+
+    @Test
+    @WithMockUser
+    void findAll_403() throws Exception {
+        userRepository.save(user);
+        mvc.perform(get(DEFAULT_PREFIX_URL))
+                .andExpect(status().isForbidden())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+        ;
+    }
+
+    @Test
+    void count_401() throws Exception {
+        mvc.perform(get(ENTITY_COUNT_URL))
+                .andExpect(status().isUnauthorized())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+        ;
+    }
+
+    @Test
+    @WithMockUser
+    void count_403() throws Exception {
+        userRepository.save(user);
+        mvc.perform(get(ENTITY_COUNT_URL))
+                .andExpect(status().isForbidden())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+        ;
+    }
+
+    @Test
+    @WithMockUser(permissions = Permission.CAN_READ_USERS)
     void filterById() throws Exception {
         prepareData();
 
@@ -295,6 +396,7 @@ public class UserResourceIT extends AbsAlgoArenaTest {
     }
 
     @Test
+    @WithMockUser(permissions = Permission.CAN_READ_USERS)
     void filterByName() throws Exception {
         prepareData();
 
@@ -321,32 +423,7 @@ public class UserResourceIT extends AbsAlgoArenaTest {
     }
 
     @Test
-    void filterByDescription() throws Exception {
-        prepareData();
-
-        shouldBeFound("email.equals=%s".formatted(DEFAULT_EMAIL));
-        shouldNotBeFound("email.equals=%s".formatted(UPDATED_EMAIL));
-
-        shouldBeFound("email.notEquals=%s".formatted(UPDATED_EMAIL));
-        shouldNotBeFound("email.notEquals=%s".formatted(DEFAULT_EMAIL));
-
-        shouldBeFound("email.specified=" + true);
-        shouldNotBeFound("email.specified=" + false);
-
-        shouldBeFound("email.in=%s,%s".formatted(DEFAULT_EMAIL, UPDATED_EMAIL));
-        shouldNotBeFound("email.in=%s".formatted(UPDATED_EMAIL));
-
-        shouldBeFound("email.notIn=%s".formatted(UPDATED_EMAIL));
-        shouldNotBeFound("email.notIn=%s,%s".formatted(DEFAULT_EMAIL, UPDATED_EMAIL));
-
-        shouldBeFound("email.contains=%s".formatted(DEFAULT_EMAIL));
-        shouldNotBeFound("email.contains=%s".formatted(UPDATED_EMAIL));
-
-        shouldBeFound("email.doesNotContains=%s".formatted(UPDATED_EMAIL));
-        shouldNotBeFound("email.doesNotContain=%s".formatted(DEFAULT_EMAIL));
-    }
-
-    @Test
+    @WithMockUser(permissions = Permission.CAN_READ_USERS)
     void filterByRoleId() throws Exception {
         prepareData();
 
@@ -390,7 +467,6 @@ public class UserResourceIT extends AbsAlgoArenaTest {
     public static UserDto buildDefaultUserDto() {
         return new UserDto()
                 .setUsername(DEFAULT_USERNAME)
-                .setEmail(DEFAULT_EMAIL)
                 .setPassword(DEFAULT_PASSWORD)
                 ;
     }
@@ -398,7 +474,6 @@ public class UserResourceIT extends AbsAlgoArenaTest {
     public static UserDto buildUpdateUserDto() {
         return new UserDto()
                 .setUsername(UPDATED_USERNAME)
-                .setEmail(UPDATED_EMAIL)
                 .setPassword(UPDATED_PASSWORD)
                 ;
     }
@@ -406,7 +481,6 @@ public class UserResourceIT extends AbsAlgoArenaTest {
     public static User buildDefaultUser() {
         return new User()
                 .setUsername(DEFAULT_USERNAME)
-                .setEmail(DEFAULT_EMAIL)
                 .setPassword(DEFAULT_PASSWORD)
                 ;
     }
@@ -414,7 +488,6 @@ public class UserResourceIT extends AbsAlgoArenaTest {
     public static User buildUpdatedUser() {
         return new User()
                 .setUsername(UPDATED_USERNAME)
-                .setEmail(UPDATED_EMAIL)
                 .setPassword(UPDATED_PASSWORD)
                 ;
     }
@@ -432,7 +505,6 @@ public class UserResourceIT extends AbsAlgoArenaTest {
                 .andExpect(jsonPath("$.content").value(hasSize(expectedSize)))
                 .andExpect(jsonPath("$.content.[*].id").value(hasItem(ID.toString())))
                 .andExpect(jsonPath("$.content.[*].username").value(hasItem(DEFAULT_USERNAME)))
-                .andExpect(jsonPath("$.content.[*].email").value(hasItem(DEFAULT_EMAIL)))
                 .andExpect(jsonPath("$.content.[*].roles").isArray())
                 .andExpect(jsonPath("$.content.[*].roles.[0].id").value(DEFAULT_ROLE.getId().toString()))
                 .andExpect(jsonPath("$.content.[*].roles.[0].name").value(DEFAULT_ROLE.getName()))

@@ -13,7 +13,12 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@SpringBootTest
+@SpringBootTest(
+        properties =
+                {
+                        "spring.profiles.active=test"
+                }
+)
 @Import(TestcontainersConfiguration.class)
 @AutoConfigureMockMvc
 @Transactional

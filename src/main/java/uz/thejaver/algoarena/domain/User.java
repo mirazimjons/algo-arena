@@ -25,9 +25,6 @@ public class User extends AbsUuidAuditableEntity {
     String username;
 
     @Column(nullable = false)
-    String email;
-
-    @Column(nullable = false)
     String password;
 
     @ManyToMany(fetch = FetchType.EAGER)

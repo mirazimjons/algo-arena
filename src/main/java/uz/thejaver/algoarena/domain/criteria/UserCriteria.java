@@ -18,7 +18,6 @@ public class UserCriteria extends CriteriaMarker {
 
     UUIDFilter id;
     StringFilter username;
-    StringFilter email;
     UUIDFilter roleId;
 
 }

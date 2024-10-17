@@ -4,8 +4,8 @@ spring:
   application:
     name: code-me-app
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5440/code_me}
-    username: ${DB_USER:code_me}
+    url: ${DB_URL:jdbc:postgresql://localhost:5445/algo_arena}
+    username: ${DB_USER:algo_arena}
     password: ${DB_PASSWORD:1235}
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
@@ -13,3 +13,9 @@ spring:
     open-in-view: true
     hibernate:
       ddl-auto: none
+app:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET_KEY:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      expiration: ${JWT_EXPIRATION:300} # 5 min
+      refresh-expiration: ${JWT_REFRESH_EXPIRATION:86400000} # 1 day
