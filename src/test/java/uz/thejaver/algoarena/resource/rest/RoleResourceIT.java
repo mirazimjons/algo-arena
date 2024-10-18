@@ -43,8 +43,8 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
     static final String ENTITY_API_URL = DEFAULT_PREFIX_URL + "/{id}";
     static final String ENTITY_COUNT_URL = DEFAULT_PREFIX_URL + "/count";
 
-    static UUID ID;
-    static UUID SIMULATED_ID = UUID.randomUUID();
+    static UUID id;
+    static UUID simulatedId = UUID.randomUUID();
 
     @Autowired
     RoleRepository roleRepository;
@@ -337,20 +337,20 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
     void filterById() throws Exception {
         prepareData();
 
-        shouldBeFound("id.equals=%s".formatted(ID));
-        shouldNotBeFound("id.equals=%s".formatted(SIMULATED_ID));
+        shouldBeFound("id.equals=%s".formatted(id));
+        shouldNotBeFound("id.equals=%s".formatted(simulatedId));
 
-        shouldBeFound("id.notEquals=%s".formatted(SIMULATED_ID));
-        shouldNotBeFound("id.notEquals=%s".formatted(ID));
+        shouldBeFound("id.notEquals=%s".formatted(simulatedId));
+        shouldNotBeFound("id.notEquals=%s".formatted(id));
 
         shouldBeFound("id.specified=" + true);
         shouldNotBeFound("id.specified=" + false);
 
-        shouldBeFound("id.in=%s,%s".formatted(ID, SIMULATED_ID));
-        shouldNotBeFound("id.in=%s".formatted(SIMULATED_ID));
+        shouldBeFound("id.in=%s,%s".formatted(id, simulatedId));
+        shouldNotBeFound("id.in=%s".formatted(simulatedId));
 
-        shouldBeFound("id.notIn=%s".formatted(SIMULATED_ID));
-        shouldNotBeFound("id.notIn=%s,%s".formatted(ID, SIMULATED_ID));
+        shouldBeFound("id.notIn=%s".formatted(simulatedId));
+        shouldNotBeFound("id.notIn=%s,%s".formatted(id, simulatedId));
     }
 
     @Test
@@ -447,7 +447,7 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
     void prepareData() {
         role = buildDefaultRole();
         roleRepository.save(role);
-        ID = role.getId();
+        id = role.getId();
     }
 
     void shouldBeFound(String filter, Integer expectedSize) throws Exception {
@@ -456,7 +456,7 @@ public class RoleResourceIT extends AbsAlgoArenaTest {
                 .andExpect(jsonPath("$").isNotEmpty())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content").value(hasSize(expectedSize)))
-                .andExpect(jsonPath("$.content.[*].id").value(hasItem(ID.toString())))
+                .andExpect(jsonPath("$.content.[*].id").value(hasItem(id.toString())))
                 .andExpect(jsonPath("$.content.[*].name").value(hasItem(DEFAULT_NAME)))
                 .andExpect(jsonPath("$.content.[*].description").value(hasItem(DEFAULT_DESCRIPTION)))
                 .andExpect(jsonPath("$.content.[*].permissions").isArray())

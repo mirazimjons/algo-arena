@@ -1,4 +1,4 @@
-package uz.thejaver.algoarena.config.securityConfig.jwt;
+package uz.thejaver.algoarena.config.security.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

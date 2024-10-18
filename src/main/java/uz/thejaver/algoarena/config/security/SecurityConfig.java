@@ -1,4 +1,4 @@
-package uz.thejaver.algoarena.config.securityConfig;
+package uz.thejaver.algoarena.config.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -12,7 +12,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import uz.thejaver.algoarena.config.securityConfig.jwt.JwtAuthenticationFilter;
+import uz.thejaver.algoarena.config.security.jwt.JwtAuthenticationFilter;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 

@@ -11,7 +11,8 @@ import uz.thejaver.springbootstarterjpasupporter.service.AbsCrudService;
 import java.util.UUID;
 
 public abstract class UserService extends AbsCrudService<UUID, User, UserDto> {
-    public UserService(UserMapper mapper, UserRepository repository) {
+
+    protected UserService(UserMapper mapper, UserRepository repository) {
         super(mapper, repository);
     }
 

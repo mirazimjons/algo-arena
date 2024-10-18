@@ -52,8 +52,8 @@ public class UserResourceIT extends AbsAlgoArenaTest {
     static final String ENTITY_COUNT_URL = DEFAULT_PREFIX_URL + "/count";
     static final String CHANGE_PASSWORD_URL = DEFAULT_PREFIX_URL + "/set-password";
 
-    static UUID ID;
-    static UUID SIMULATED_ID = UUID.randomUUID();
+    static UUID id;
+    static UUID simulatedId = UUID.randomUUID();
 
     @Autowired
     RoleRepository roleRepository;
@@ -495,20 +495,20 @@ public class UserResourceIT extends AbsAlgoArenaTest {
     void filterById() throws Exception {
         prepareData();
 
-        shouldBeFound("id.equals=%s".formatted(ID));
-        shouldNotBeFound("id.equals=%s".formatted(SIMULATED_ID));
+        shouldBeFound("id.equals=%s".formatted(id));
+        shouldNotBeFound("id.equals=%s".formatted(simulatedId));
 
-        shouldBeFound("id.notEquals=%s".formatted(SIMULATED_ID));
-        shouldNotBeFound("id.notEquals=%s".formatted(ID));
+        shouldBeFound("id.notEquals=%s".formatted(simulatedId));
+        shouldNotBeFound("id.notEquals=%s".formatted(id));
 
         shouldBeFound("id.specified=" + true);
         shouldNotBeFound("id.specified=" + false);
 
-        shouldBeFound("id.in=%s,%s".formatted(ID, SIMULATED_ID));
-        shouldNotBeFound("id.in=%s".formatted(SIMULATED_ID));
+        shouldBeFound("id.in=%s,%s".formatted(id, simulatedId));
+        shouldNotBeFound("id.in=%s".formatted(simulatedId));
 
-        shouldBeFound("id.notIn=%s".formatted(SIMULATED_ID));
-        shouldNotBeFound("id.notIn=%s,%s".formatted(ID, SIMULATED_ID));
+        shouldBeFound("id.notIn=%s".formatted(simulatedId));
+        shouldNotBeFound("id.notIn=%s,%s".formatted(id, simulatedId));
     }
 
     @Test
@@ -544,19 +544,19 @@ public class UserResourceIT extends AbsAlgoArenaTest {
         prepareData();
 
         shouldBeFound("roleId.equals=%s".formatted(DEFAULT_ROLE.getId()));
-        shouldNotBeFound("roleId.equals=%s".formatted(SIMULATED_ID));
+        shouldNotBeFound("roleId.equals=%s".formatted(simulatedId));
 
-        shouldBeFound("roleId.notEquals=%s".formatted(SIMULATED_ID));
+        shouldBeFound("roleId.notEquals=%s".formatted(simulatedId));
         shouldNotBeFound("roleId.notEquals=%s".formatted(DEFAULT_ROLE.getId()));
 
         shouldBeFound("roleId.specified=" + true);
         shouldNotBeFound("roleId.specified=" + false);
 
-        shouldBeFound("roleId.in=%s,%s".formatted(DEFAULT_ROLE.getId(), SIMULATED_ID));
-        shouldNotBeFound("roleId.in=%s".formatted(SIMULATED_ID));
+        shouldBeFound("roleId.in=%s,%s".formatted(DEFAULT_ROLE.getId(), simulatedId));
+        shouldNotBeFound("roleId.in=%s".formatted(simulatedId));
 
-        shouldBeFound("roleId.notIn=%s".formatted(SIMULATED_ID));
-        shouldNotBeFound("roleId.notIn=%s,%s".formatted(DEFAULT_ROLE.getId(), SIMULATED_ID));
+        shouldBeFound("roleId.notIn=%s".formatted(simulatedId));
+        shouldNotBeFound("roleId.notIn=%s,%s".formatted(DEFAULT_ROLE.getId(), simulatedId));
     }
 
     private void initUser() {
@@ -610,7 +610,7 @@ public class UserResourceIT extends AbsAlgoArenaTest {
 
     void prepareData() {
         userRepository.save(user);
-        ID = user.getId();
+        id = user.getId();
     }
 
     void shouldBeFound(String filter, Integer expectedSize) throws Exception {
@@ -619,7 +619,7 @@ public class UserResourceIT extends AbsAlgoArenaTest {
                 .andExpect(jsonPath("$").isNotEmpty())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content").value(hasSize(expectedSize)))
-                .andExpect(jsonPath("$.content.[*].id").value(hasItem(ID.toString())))
+                .andExpect(jsonPath("$.content.[*].id").value(hasItem(id.toString())))
                 .andExpect(jsonPath("$.content.[*].username").value(hasItem(DEFAULT_USERNAME)))
                 .andExpect(jsonPath("$.content.[*].roles").isArray())
                 .andExpect(jsonPath("$.content.[*].roles.[0].id").value(DEFAULT_ROLE.getId().toString()))

@@ -1,4 +1,4 @@
-package uz.thejaver.algoarena.config.securityConfig;
+package uz.thejaver.algoarena.config.security;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

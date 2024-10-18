@@ -6,6 +6,7 @@ class AlgoArenaApplicationIT extends AbsAlgoArenaTest {
 
     @Test
     void contextLoads() {
+        // This test is intentionally left empty as it does not contain any actual test cases.
     }
 
 }

@@ -11,6 +11,7 @@ import uz.thejaver.algoarena.domain.criteria.UserCriteria;
 import uz.thejaver.algoarena.dto.UserDto;
 import uz.thejaver.algoarena.mapper.UserMapper;
 import uz.thejaver.algoarena.repository.UserRepository;
+import uz.thejaver.springbootstarterjpasupporter.entity.AbsUuidAuditableEntity_;
 import uz.thejaver.springbootstarterjpasupporter.service.AbsQueryService;
 
 import java.util.Objects;
@@ -27,7 +28,7 @@ public class UserQueryService extends AbsQueryService<UUID, User, UserDto, UserC
         SpecificationJoiner<User> joiner = new SpecificationJoiner<>(criteria.getFilterType());
 
         if (Objects.nonNull(criteria.getId())) {
-            specification = joiner.join(specification, buildSpecification(criteria.getId(), User_.id));
+            specification = joiner.join(specification, buildSpecification(criteria.getId(), AbsUuidAuditableEntity_.id));
         }
         if (Objects.nonNull(criteria.getUsername())) {
             specification = joiner.join(specification, buildStringSpecification(criteria.getUsername(), User_.username));

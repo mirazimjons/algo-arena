@@ -9,7 +9,7 @@ import uz.thejaver.springbootstarterjpasupporter.service.AbsCrudService;
 import java.util.UUID;
 
 public abstract class RoleService extends AbsCrudService<UUID, Role, RoleDto> {
-    public RoleService(RoleMapper mapper, RoleRepository repository) {
+    protected RoleService(RoleMapper mapper, RoleRepository repository) {
         super(mapper, repository);
     }
 }

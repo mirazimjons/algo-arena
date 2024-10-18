@@ -29,6 +29,9 @@
         <spring-boot-exception-supporter-version>0.0.1</spring-boot-exception-supporter-version>
         <mapstruct.version>1.6.2</mapstruct.version>
         <json-web-token.version>0.12.6</json-web-token.version>
+        <sonar.host.url>http://localhost:9000</sonar.host.url>
+        <sonar.token>sqp_87534f37cb942e7dce59bf6009678f05eebed880</sonar.token>
+        <sonar.projectKey>algo_arena </sonar.projectKey>
     </properties>
     <dependencies>
         <dependency>
@@ -193,6 +196,11 @@
                     </includes>
                     <useModulePath>false</useModulePath>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>4.0.0.4121</version>
             </plugin>
         </plugins>
     </build>

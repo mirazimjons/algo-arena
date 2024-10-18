@@ -1,4 +1,4 @@
-package uz.thejaver.algoarena.config.securityConfig.jwt;
+package uz.thejaver.algoarena.config.security.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -13,7 +13,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import uz.thejaver.algoarena.config.securityConfig.SecurityConstants;
+import uz.thejaver.algoarena.config.security.SecurityConstants;
 
 import java.io.IOException;
 import java.util.Objects;
