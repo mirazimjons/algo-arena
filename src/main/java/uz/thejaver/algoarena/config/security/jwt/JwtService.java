@@ -55,12 +55,13 @@ public class JwtService {
             @Nonnull UserDetails userDetails,
             @Nonnull Long expiration
     ) {
+        long currentTimeMillis = System.currentTimeMillis();
         return Jwts
                 .builder()
                 .claims(extraClaims)
                 .subject(userDetails.getUsername())
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .issuedAt(new Date(currentTimeMillis))
+                .expiration(new Date(currentTimeMillis + expiration))
                 .signWith(getSignInKey())
                 .compact();
     }

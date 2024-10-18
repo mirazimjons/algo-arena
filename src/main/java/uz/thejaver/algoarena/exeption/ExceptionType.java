@@ -8,6 +8,7 @@ import java.util.Map;
 @Getter
 public enum ExceptionType implements Type {
     PASSWORD_NOT_DEFINED(412, "Password error", "Password is not defined", null),
+    INVALID_CREDENTIALS(401, "Invalid credentials", "Credential you provided is not valid", null),
     ;
 
     private final Integer code;
