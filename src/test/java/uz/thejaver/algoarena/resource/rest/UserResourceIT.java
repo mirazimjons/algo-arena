@@ -9,11 +9,13 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import uz.thejaver.algoarena.AbsAlgoArenaTest;
 import uz.thejaver.algoarena.config.securityConfig.WithMockUser;
 import uz.thejaver.algoarena.domain.Role;
 import uz.thejaver.algoarena.domain.User;
 import uz.thejaver.algoarena.domain.enums.Permission;
+import uz.thejaver.algoarena.dto.PasswordChangeDto;
 import uz.thejaver.algoarena.dto.RoleDto;
 import uz.thejaver.algoarena.dto.UserDto;
 import uz.thejaver.algoarena.repository.RoleRepository;
@@ -21,12 +23,14 @@ import uz.thejaver.algoarena.repository.UserRepository;
 import uz.thejaver.algoarena.util.TestUtil;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -46,6 +50,7 @@ public class UserResourceIT extends AbsAlgoArenaTest {
     static final String DEFAULT_PREFIX_URL = "/api/users";
     static final String ENTITY_API_URL = DEFAULT_PREFIX_URL + "/{id}";
     static final String ENTITY_COUNT_URL = DEFAULT_PREFIX_URL + "/count";
+    static final String CHANGE_PASSWORD_URL = DEFAULT_PREFIX_URL + "/set-password";
 
     static UUID ID;
     static UUID SIMULATED_ID = UUID.randomUUID();
@@ -54,6 +59,8 @@ public class UserResourceIT extends AbsAlgoArenaTest {
     RoleRepository roleRepository;
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     UserDto userDto;
     User user;
@@ -336,6 +343,115 @@ public class UserResourceIT extends AbsAlgoArenaTest {
 
         long after = userRepository.count();
         assertThat(after).isEqualTo(before - 1);
+    }
+
+    @Test
+    void changePassword_401() throws Exception {
+        final String password = "StringPassword";
+        userRepository.save(user);
+        PasswordChangeDto passwordChangeDto = new PasswordChangeDto()
+                .setUsername(user.getUsername())
+                .setNewPassword(password);
+        mvc.perform(put(CHANGE_PASSWORD_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(passwordChangeDto)))
+                .andExpect(status().isUnauthorized())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+        ;
+    }
+
+    @Test
+    @WithMockUser
+    void changePassword_403() throws Exception {
+        final String password = "StringPassword";
+        userRepository.save(user);
+        PasswordChangeDto passwordChangeDto = new PasswordChangeDto()
+                .setUsername(user.getUsername())
+                .setNewPassword(password);
+        mvc.perform(put(CHANGE_PASSWORD_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(passwordChangeDto)))
+                .andExpect(status().isForbidden())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+        ;
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @WithMockUser(permissions = Permission.CAN_RESET_PASSWORD)
+    void changePasswordWithInvalidUsername(String username) throws Exception {
+        final String password = "StringPassword";
+        userRepository.save(user);
+        PasswordChangeDto passwordChangeDto = new PasswordChangeDto()
+                .setUsername(username)
+                .setNewPassword(password);
+        mvc.perform(put(CHANGE_PASSWORD_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(passwordChangeDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$").isNotEmpty())
+                .andExpect(jsonPath("$.title").isNotEmpty())
+                .andExpect(jsonPath("$.attributes.username").isNotEmpty())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+        ;
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @WithMockUser(permissions = Permission.CAN_RESET_PASSWORD)
+    void changePasswordWithInvalidPassword(String password) throws Exception {
+        userRepository.save(user);
+        PasswordChangeDto passwordChangeDto = new PasswordChangeDto()
+                .setUsername(user.getUsername())
+                .setNewPassword(password);
+        mvc.perform(put(CHANGE_PASSWORD_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(passwordChangeDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$").isNotEmpty())
+                .andExpect(jsonPath("$.title").isNotEmpty())
+                .andExpect(jsonPath("$.attributes.newPassword").isNotEmpty())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+        ;
+    }
+
+    @Test
+    @WithMockUser(permissions = Permission.CAN_RESET_PASSWORD)
+    void changePassword() throws Exception {
+        final String password = "StringPassword";
+        userRepository.save(user);
+        PasswordChangeDto passwordChangeDto = new PasswordChangeDto()
+                .setUsername(user.getUsername())
+                .setNewPassword(password);
+        mvc.perform(put(CHANGE_PASSWORD_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(passwordChangeDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isNotEmpty())
+                .andExpect(jsonPath("$").value(Boolean.TRUE))
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+        ;
+        Optional<User> byUsernameOptional = userRepository.findByUsername(user.getUsername());
+        assertTrue(byUsernameOptional.isPresent());
+        User found = byUsernameOptional.get();
+        assertThat(found.getUsername()).isEqualTo(user.getUsername());
+        assertTrue(passwordEncoder.matches(password, found.getPassword()));
+    }
+
+    @Test
+    @WithMockUser(permissions = Permission.CAN_RESET_PASSWORD)
+    void changePasswordWithNonExistedUser() throws Exception {
+        final String password = "StringPassword";
+        userRepository.save(user);
+        PasswordChangeDto passwordChangeDto = new PasswordChangeDto()
+                .setUsername("HelloGuys")
+                .setNewPassword(password);
+        mvc.perform(put(CHANGE_PASSWORD_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(passwordChangeDto)))
+                .andExpect(status().isNotFound())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+        ;
     }
 
     @Test

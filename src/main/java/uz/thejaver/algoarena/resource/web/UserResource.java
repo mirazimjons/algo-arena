@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import uz.thejaver.algoarena.domain.criteria.UserCriteria;
+import uz.thejaver.algoarena.dto.PasswordChangeDto;
 import uz.thejaver.algoarena.dto.UserDto;
 import uz.thejaver.algoarena.service.UserQueryService;
 import uz.thejaver.algoarena.service.UserService;
@@ -63,6 +64,12 @@ public class UserResource {
     @PreAuthorize("hasAnyAuthority(T(uz.thejaver.algoarena.domain.enums.Permission).CAN_DELETE_USERS)")
     public void delete(@PathVariable("id") UUID id) {
         userService.deleteById(id);
+    }
+
+    @PutMapping("/set-password")
+    @PreAuthorize("hasAnyAuthority(T(uz.thejaver.algoarena.domain.enums.Permission).CAN_RESET_PASSWORD)")
+    public Boolean changePassword(@RequestBody @Valid PasswordChangeDto passwordChangeDto) {
+        return userService.changePassword(passwordChangeDto);
     }
 
 }

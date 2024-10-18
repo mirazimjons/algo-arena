@@ -1,5 +1,7 @@
 package uz.thejaver.algoarena.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -10,7 +12,10 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PasswordChangeDto {
 
-    String oldPassword;
+    @NotBlank
+    String username;
+
+    @NotBlank
     String newPassword;
 
 }
