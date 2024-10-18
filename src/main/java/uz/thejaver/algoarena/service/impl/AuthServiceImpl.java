@@ -1,8 +1,8 @@
 package uz.thejaver.algoarena.service.impl;
 
+import jakarta.annotation.Nonnull;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import uz.thejaver.algoarena.config.security.UserDetailsImpl;
@@ -10,6 +10,7 @@ import uz.thejaver.algoarena.config.security.jwt.JwtService;
 import uz.thejaver.algoarena.domain.User;
 import uz.thejaver.algoarena.dto.AccessTokenRequestDto;
 import uz.thejaver.algoarena.dto.AuthResponseDto;
+import uz.thejaver.algoarena.dto.RefreshTokenRequestDto;
 import uz.thejaver.algoarena.exeption.ExceptionType;
 import uz.thejaver.algoarena.repository.UserRepository;
 import uz.thejaver.algoarena.service.AuthService;
@@ -32,10 +33,24 @@ public class AuthServiceImpl extends AuthService {
             throw new CommonException(ExceptionType.INVALID_CREDENTIALS, "Invalid credentials");
         }
 
-        UserDetails userDetails = new UserDetailsImpl(user);
+        UserDetailsImpl userDetails = new UserDetailsImpl(user);
         return new AuthResponseDto()
                 .setAccessToken(jwtService.generateToken(userDetails))
                 .setRefreshToken(jwtService.generateRefreshToken(userDetails));
+    }
+
+    @Override
+    public AuthResponseDto refreshToken(@Nonnull RefreshTokenRequestDto refreshTokenRequestDto) {
+        if (!jwtService.isTokenValid(refreshTokenRequestDto.getRefreshToken())) {
+            throw new CommonException(DefaultType.UNAUTHORIZED, "Token is expired or invalid");
+        }
+        String username = jwtService.extractUsername(refreshTokenRequestDto.getRefreshToken());
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new CommonException(ExceptionType.INVALID_CREDENTIALS, "User not found"));
+        UserDetailsImpl userDetails = new UserDetailsImpl(user);
+        return new AuthResponseDto()
+                .setAccessToken(jwtService.generateToken(userDetails))
+                .setRefreshToken(refreshTokenRequestDto.getRefreshToken());
     }
 
 }

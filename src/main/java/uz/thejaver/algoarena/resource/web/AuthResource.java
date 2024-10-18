@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uz.thejaver.algoarena.dto.AccessTokenRequestDto;
 import uz.thejaver.algoarena.dto.AuthResponseDto;
+import uz.thejaver.algoarena.dto.RefreshTokenRequestDto;
 import uz.thejaver.algoarena.service.AuthService;
 
 @Slf4j
@@ -22,6 +23,11 @@ public class AuthResource {
     @PostMapping("/sign-in")
     public AuthResponseDto signIn(@RequestBody @Valid AccessTokenRequestDto accessTokenRequestDto) {
         return authService.signIn(accessTokenRequestDto);
+    }
+
+    @PostMapping("/refresh-token")
+    public AuthResponseDto refreshToken(@RequestBody @Valid RefreshTokenRequestDto refreshTokenRequestDto) {
+        return authService.refreshToken(refreshTokenRequestDto);
     }
 
 }
