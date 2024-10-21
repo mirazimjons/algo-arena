@@ -15,9 +15,11 @@ import uz.thejaver.algoarena.config.security.jwt.JwtService;
 import uz.thejaver.algoarena.domain.User;
 import uz.thejaver.algoarena.dto.AccessTokenRequestDto;
 import uz.thejaver.algoarena.dto.RefreshTokenRequestDto;
+import uz.thejaver.algoarena.dto.SignUpRequestDto;
 import uz.thejaver.algoarena.repository.UserRepository;
 import uz.thejaver.algoarena.util.TestUtil;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -33,9 +35,11 @@ public class AuthResourceIT extends AbsAlgoArenaTest {
 
     static final String DEFAULT_PREFIX_URL = "/api/auth";
     static final String SIGN_IN_URL = DEFAULT_PREFIX_URL + "/sign-in";
+    static final String SIGN_UP_URL = DEFAULT_PREFIX_URL + "/sign-up";
     static final String REFRESH_TOKEN_URL = DEFAULT_PREFIX_URL + "/refresh-token";
 
     AccessTokenRequestDto accessTokenRequestDto;
+    SignUpRequestDto signUpRequestDto;
 
     @Autowired
     private UserRepository userRepository;
@@ -47,6 +51,79 @@ public class AuthResourceIT extends AbsAlgoArenaTest {
     @BeforeEach
     void setUp() {
         init();
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    void testSignUpWithInvalidUsername(String username) throws Exception {
+        long before = userRepository.count();
+        signUpRequestDto.setUsername(username);
+        mvc.perform(post(SIGN_UP_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(signUpRequestDto))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$").isNotEmpty())
+                .andExpect(jsonPath("$.title").isNotEmpty())
+                .andExpect(jsonPath("$.attributes.username").isNotEmpty())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()));
+        long after = userRepository.count();
+        assertThat(after).isEqualTo(before);
+    }
+
+    @Test
+    void testSignUpWithDuplicatedUsername() throws Exception {
+        userRepository.save(
+                new User()
+                        .setUsername(DEFAULT_USERNAME)
+                        .setPassword(passwordEncoder.encode(DEFAULT_PASSWORD))
+        );
+        long before = userRepository.count();
+        signUpRequestDto.setUsername(DEFAULT_USERNAME);
+        mvc.perform(post(SIGN_UP_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(signUpRequestDto))
+                )
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$").isNotEmpty())
+                .andExpect(jsonPath("$.title").isNotEmpty())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()));
+        long after = userRepository.count();
+        assertThat(after).isEqualTo(before);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    void testSignUpWithInvalidPassword(String password) throws Exception {
+        long before = userRepository.count();
+        signUpRequestDto.setPassword(password);
+        mvc.perform(post(SIGN_UP_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(signUpRequestDto))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$").isNotEmpty())
+                .andExpect(jsonPath("$.title").isNotEmpty())
+                .andExpect(jsonPath("$.attributes.password").isNotEmpty())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()));
+        long after = userRepository.count();
+        assertThat(after).isEqualTo(before);
+    }
+
+    @Test
+    void testSignUp() throws Exception {
+        long before = userRepository.count();
+        mvc.perform(post(SIGN_UP_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(signUpRequestDto))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isNotEmpty())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()));
+        long after = userRepository.count();
+        assertThat(after).isEqualTo(before + 1);
     }
 
     @ParameterizedTest
@@ -183,6 +260,13 @@ public class AuthResourceIT extends AbsAlgoArenaTest {
 
     private void init() {
         accessTokenRequestDto = buildDefaultAccessTokenRequestDto();
+        signUpRequestDto = buildDefaultSignUpRequestDto();
+    }
+
+    public static SignUpRequestDto buildDefaultSignUpRequestDto() {
+        return new SignUpRequestDto()
+                .setUsername(DEFAULT_USERNAME)
+                .setPassword(DEFAULT_PASSWORD);
     }
 
     public static AccessTokenRequestDto buildDefaultAccessTokenRequestDto() {
