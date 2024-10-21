@@ -19,7 +19,6 @@ import uz.thejaver.springbootstarterexceptionsupporter.exception.CommonException
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 @Configuration
 @RequiredArgsConstructor
@@ -29,8 +28,8 @@ public class SecurityBeans {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return userId -> {
-            Optional<User> userOptional = userRepository.findById(UUID.fromString(userId));
+        return username -> {
+            Optional<User> userOptional = userRepository.findByUsername(username);
             return userOptional
                     .map(user -> {
                         if (Objects.isNull(user.getPassword())) {

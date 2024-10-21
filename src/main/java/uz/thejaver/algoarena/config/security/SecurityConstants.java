@@ -11,6 +11,6 @@ public interface SecurityConstants {
     String JWT_HEADER = AUTHORIZATION;
     String TOKEN_PREFIX = "Bearer ";
     String ROLES_CLAIM_NAME = "roles";
-    String USERNAME_CLAIM_NAME = "username";
+    String USER_ID_CLAIM_NAME = "userId";
 
 }

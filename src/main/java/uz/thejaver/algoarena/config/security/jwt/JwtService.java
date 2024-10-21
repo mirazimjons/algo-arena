@@ -52,7 +52,7 @@ public class JwtService {
             @Nonnull Long expiration
     ) {
         extraClaims.put(SecurityConstants.ROLES_CLAIM_NAME, userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
-        extraClaims.put(SecurityConstants.USERNAME_CLAIM_NAME, userDetails.getUsername());
+        extraClaims.put(SecurityConstants.USER_ID_CLAIM_NAME, userDetails.getId());
         return buildToken(extraClaims, userDetails, expiration);
     }
 
@@ -75,7 +75,7 @@ public class JwtService {
         return Jwts
                 .builder()
                 .claims(extraClaims)
-                .subject(userDetails.getId().toString())
+                .subject(userDetails.getUsername())
                 .issuedAt(new Date(currentTimeMillis))
                 .expiration(new Date(currentTimeMillis + expiration))
                 .signWith(getSignInKey())
@@ -88,12 +88,12 @@ public class JwtService {
     }
 
     @Nonnull
-    public String extractUsername(@NonNull String token) {
-        return extractClaim(token, claims -> (String) claims.get(SecurityConstants.USERNAME_CLAIM_NAME));
+    public String extractUserId(@NonNull String token) {
+        return extractClaim(token, claims -> (String) claims.get(SecurityConstants.USER_ID_CLAIM_NAME));
     }
 
     @Nonnull
-    public String extractUserId(@NonNull String token) {
+    public String extractUsername(@NonNull String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
