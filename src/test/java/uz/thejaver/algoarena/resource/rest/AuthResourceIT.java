@@ -16,6 +16,7 @@ import uz.thejaver.algoarena.domain.User;
 import uz.thejaver.algoarena.dto.AccessTokenRequestDto;
 import uz.thejaver.algoarena.dto.RefreshTokenRequestDto;
 import uz.thejaver.algoarena.dto.SignUpRequestDto;
+import uz.thejaver.algoarena.exeption.ExceptionType;
 import uz.thejaver.algoarena.repository.UserRepository;
 import uz.thejaver.algoarena.util.TestUtil;
 
@@ -196,6 +197,22 @@ public class AuthResourceIT extends AbsAlgoArenaTest {
                         .content(TestUtil.convertObjectToJsonBytes(accessTokenRequestDto))
                 )
                 .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$").isNotEmpty())
+                .andExpect(jsonPath("$.title").isNotEmpty())
+                .andDo(result -> System.out.println(result.getResponse().getContentAsString()));
+    }
+
+    @Test
+    void testSignInWithNonDefinedPassword() throws Exception {
+        userRepository.save(
+                new User()
+                        .setUsername(DEFAULT_USERNAME)
+        );
+        mvc.perform(post(SIGN_IN_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(TestUtil.convertObjectToJsonBytes(accessTokenRequestDto))
+                )
+                .andExpect(status().is(ExceptionType.PASSWORD_NOT_DEFINED.getCode()))
                 .andExpect(jsonPath("$").isNotEmpty())
                 .andExpect(jsonPath("$.title").isNotEmpty())
                 .andDo(result -> System.out.println(result.getResponse().getContentAsString()));

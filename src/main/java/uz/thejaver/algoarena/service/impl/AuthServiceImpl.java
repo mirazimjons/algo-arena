@@ -19,6 +19,8 @@ import uz.thejaver.algoarena.service.AuthService;
 import uz.thejaver.springbootstarterexceptionsupporter.exception.CommonException;
 import uz.thejaver.springbootstarterexceptionsupporter.exception.exceptipTypes.DefaultType;
 
+import java.util.Objects;
+
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl extends AuthService {
@@ -33,6 +35,11 @@ public class AuthServiceImpl extends AuthService {
     public AuthResponseDto signIn(@NonNull AccessTokenRequestDto accessTokenRequestDto) {
         User user = userRepository.findByUsername(accessTokenRequestDto.getUsername())
                 .orElseThrow(() -> new CommonException(ExceptionType.INVALID_CREDENTIALS, "User not found"));
+
+        if (Objects.isNull(user.getPassword())) {
+            throw new CommonException(ExceptionType.PASSWORD_NOT_DEFINED, "Password is not defined for this user");
+        }
+
         if (!passwordEncoder.matches(accessTokenRequestDto.getPassword(), user.getPassword())) {
             throw new CommonException(ExceptionType.INVALID_CREDENTIALS, "Invalid credentials");
         }
