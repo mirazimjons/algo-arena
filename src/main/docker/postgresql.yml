@@ -3,6 +3,7 @@ name: algo_arena
 services:
   postgres:
     image: postgres:latest
+    container_name: psql
     environment:
       POSTGRES_USER: algo_arena
       POSTGRES_PASSWORD: 1235

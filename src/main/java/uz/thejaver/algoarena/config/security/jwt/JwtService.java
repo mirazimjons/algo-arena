@@ -1,12 +1,14 @@
 package uz.thejaver.algoarena.config.security.jwt;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.Nonnull;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import uz.thejaver.algoarena.config.security.SecurityConstants;
 import uz.thejaver.algoarena.config.security.UserDetailsImpl;
@@ -16,6 +18,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class JwtService {
@@ -48,7 +51,8 @@ public class JwtService {
             @Nonnull UserDetailsImpl userDetails,
             @Nonnull Long expiration
     ) {
-        extraClaims.put(SecurityConstants.ROLES_CLAIM_NAME, userDetails.getAuthorities());
+        extraClaims.put(SecurityConstants.ROLES_CLAIM_NAME, userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
+        extraClaims.put(SecurityConstants.USERNAME_CLAIM_NAME, userDetails.getUsername());
         return buildToken(extraClaims, userDetails, expiration);
     }
 
@@ -71,7 +75,7 @@ public class JwtService {
         return Jwts
                 .builder()
                 .claims(extraClaims)
-                .subject(userDetails.getUsername())
+                .subject(userDetails.getId().toString())
                 .issuedAt(new Date(currentTimeMillis))
                 .expiration(new Date(currentTimeMillis + expiration))
                 .signWith(getSignInKey())
@@ -85,6 +89,11 @@ public class JwtService {
 
     @Nonnull
     public String extractUsername(@NonNull String token) {
+        return extractClaim(token, claims -> (String) claims.get(SecurityConstants.USERNAME_CLAIM_NAME));
+    }
+
+    @Nonnull
+    public String extractUserId(@NonNull String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -94,7 +103,11 @@ public class JwtService {
 
     @Nonnull
     private Boolean isTokenExpired(@Nonnull String token) {
-        return extractExpiration(token).before(new Date());
+        try {
+            return extractExpiration(token).before(new Date());
+        } catch (ExpiredJwtException e) {
+            return Boolean.TRUE;
+        }
     }
 
     private Claims extractAllClaims(@Nonnull String token) {

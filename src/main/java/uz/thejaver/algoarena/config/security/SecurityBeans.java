@@ -19,6 +19,7 @@ import uz.thejaver.springbootstarterexceptionsupporter.exception.CommonException
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 @Configuration
 @RequiredArgsConstructor
@@ -28,8 +29,8 @@ public class SecurityBeans {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> {
-            Optional<User> userOptional = userRepository.findByUsername(username);
+        return userId -> {
+            Optional<User> userOptional = userRepository.findById(UUID.fromString(userId));
             return userOptional
                     .map(user -> {
                         if (Objects.isNull(user.getPassword())) {
@@ -52,7 +53,6 @@ public class SecurityBeans {
     public AuthenticationManager authenticationManager(@NonNull AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {

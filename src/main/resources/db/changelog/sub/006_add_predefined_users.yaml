@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005_add_predefined_users
+      author: ${mq}
+      context: predefined-data
+      changes:
+        - loadData:
+            file: /db/changelog/predefined-data/users.csv
+            tableName: _user
+            separator: ';'
+            encoding: 'UTF-8'
+        - loadData:
+            file: /db/changelog/predefined-data/rel_user_and_roles.csv
+            tableName: _rel_user_and_role
+            separator: ';'
+            encoding: 'UTF-8'

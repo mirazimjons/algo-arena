@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005_add_predefined_roles
+      author: ${mq}
+      context: predefined-data
+      changes:
+        - loadData:
+            file: /db/changelog/predefined-data/roles.csv
+            tableName: _role
+            separator: ';'
+            encoding: 'UTF-8'
+        - loadData:
+            file: /db/changelog/predefined-data/rel_role_and_permissions.csv
+            tableName: _rel_role_permission
+            separator: ';'
+            encoding: 'UTF-8'

@@ -9,6 +9,7 @@ import uz.thejaver.algoarena.domain.Role;
 import uz.thejaver.algoarena.domain.User;
 
 import java.util.Collection;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Accessors(chain = true)
@@ -31,6 +32,10 @@ public record UserDetailsImpl(@NonNull User user) implements UserDetails {
     @Override
     public String getUsername() {
         return user.getUsername();
+    }
+
+    public UUID getId() {
+        return user.getId();
     }
 
 }

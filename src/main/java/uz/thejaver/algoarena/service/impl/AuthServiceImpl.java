@@ -19,6 +19,8 @@ import uz.thejaver.algoarena.service.AuthService;
 import uz.thejaver.springbootstarterexceptionsupporter.exception.CommonException;
 import uz.thejaver.springbootstarterexceptionsupporter.exception.exceptipTypes.DefaultType;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl extends AuthService {
@@ -65,8 +67,8 @@ public class AuthServiceImpl extends AuthService {
         if (!jwtService.isTokenValid(refreshTokenRequestDto.getRefreshToken())) {
             throw new CommonException(DefaultType.UNAUTHORIZED, "Token is expired or invalid");
         }
-        String username = jwtService.extractUsername(refreshTokenRequestDto.getRefreshToken());
-        User user = userRepository.findByUsername(username)
+        String userId = jwtService.extractUserId(refreshTokenRequestDto.getRefreshToken());
+        User user = userRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new CommonException(ExceptionType.INVALID_CREDENTIALS, "User not found"));
         UserDetailsImpl userDetails = new UserDetailsImpl(user);
         return new AuthResponseDto()

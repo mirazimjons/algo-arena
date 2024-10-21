@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: create_table_role
+      id: 001_create_table_role
       author: ${mq}
       changes:
         - createTable:

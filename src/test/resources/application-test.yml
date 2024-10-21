@@ -1,3 +1,6 @@
-#logging:
-#  level:
-#    uz.thejaver.algoarena: DEBUG
+logging:
+  level:
+    uz.thejaver.algoarena: DEBUG
+spring:
+  liquibase:
+    contexts: none

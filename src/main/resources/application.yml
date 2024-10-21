@@ -9,6 +9,7 @@ spring:
     password: ${DB_PASSWORD:1235}
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
+    contexts: predefined-data
   jpa:
     open-in-view: true
     hibernate:
